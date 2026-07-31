@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 9 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 9 100% 96%;
+    --secondary-foreground: 9 100% 32%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 9 100% 96%;
+    --accent-foreground: 9 100% 32%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 9 100% 60%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 9 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 0% 30%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 9 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .transition-all-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  }
+}
+/* Hero Section Styles */
+#hero {
+  font-family: monospace;
+  padding: 50px 20px;
+  padding-bottom: 5px;
+  text-align: center;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.hero-content p {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.hero-content h1 span, .hero-content p .pickup {
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+
+.hero-content h1 span:hover, .hero-content p .pickup:hover {
+  color: hsl(var(--primary));
+  cursor: default;
+}
+
+.btn-project {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  from, to { border-color: transparent; }
+  50% { border-color: hsl(var(--foreground)); }
+}
+
+.text-container {
+  padding: 10px;
+  max-width: 100%;
+  box-sizing: content-box;
+  overflow: hidden;
+  word-wrap: break-word;
+  text-align: left;
+}
+
+.animated-text {
+  font-size: 24px;
+  font-weight: bold;
+  justify-content: center;
+  color: hsl(var(--foreground));
+  display: inline-block;
+  border-right: 2px solid hsl(var(--foreground));
+  overflow: hidden;
+  white-space: normal;
+}
+
+.typing-effect {
+  width: 100%;
+  animation: typing 2s steps(20) infinite alternate, blink 0.75s step-end infinite;
+}
+
+.centered-text {
+  text-align: center;
+  margin-top: 50px;
+  padding-top: 2%;
+}
+
+.pickup {
+  color: hsl(var(--primary));
+  font-size: 2rem;
+}
+
+/* Responsive Styles for Hero */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 32px;
+  }
+
+  .hero-content p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 24px;
+  }
+
+  .hero-content p {
+    font-size: 16px;
+  }
+
+  .btn-contact, .btn-project {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
