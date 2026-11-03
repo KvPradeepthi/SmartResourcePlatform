@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: pecup-platform
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_SECRET
+        value: pecup_secret_demo_key_9876543210
+      - key: SUPABASE_ALLOW_DEV_ANON_FALLBACK
+        value: "true"
