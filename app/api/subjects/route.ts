@@ -38,9 +38,9 @@ export async function GET(request: Request) {
         // Default to Semester 2 (current global semester)
         semester = '2'
       }
-    }
+    
 
-    console.log(`[DEBUG] Final params - year: ${year}, branch: ${branch}, semester: ${semester}, resource_type: ${resourceType}`)
+    console.log('[DEBUG] Final params - year: ${year}, branch: ${branch}, semester: ${semester}, resource_type: ${resourceType}')
 
     if (!year || !branch || !semester) {
       return NextResponse.json({ error: 'Missing context (year/branch/semester).' }, { status: 400 })
@@ -138,11 +138,11 @@ export async function GET(request: Request) {
         resource_type: subject.resource_type
       }))
     
-    console.log(`[DEBUG] Subjects API - Returning ${subjects.length} subjects from offerings (filtered by resource_type: ${resourceType}):`, subjects)
+    console.log('[DEBUG] Subjects API - Returning ${subjects.length} subjects from offerings (filtered by resource_type: ${resourceType}):', subjects)
     return NextResponse.json({ subjects })
   } catch (e) {
     return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 })
   }
-}
 
+}
 

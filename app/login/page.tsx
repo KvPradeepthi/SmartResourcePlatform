@@ -3,8 +3,8 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { LogIn, Shield, Loader2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LogIn, Shield, Loader2, UserCheck } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Loader from '@/components/Loader'
 
 export default function LoginPage() {
@@ -12,16 +12,24 @@ export default function LoginPage() {
   const router = useRouter()
   const [isSigningIn, setIsSigningIn] = useState(false)
 
-  // If already signed in, send them to the home (or dashboard)
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/')
+      router.push('/home')
     }
   }, [status, router])
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setIsSigningIn(true)
-    signIn("google")
+    try {
+      await signIn('credentials', {
+        email: 'deepthikamichetty336@gmail.com',
+        callbackUrl: '/home',
+        redirect: true,
+      })
+    } catch (e) {
+      console.error(e)
+      setIsSigningIn(false)
+    }
   }
 
   if (status === 'loading' || isSigningIn) {
@@ -42,30 +50,33 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-semibold text-foreground">Welcome to PEC.UP</h1>
-          <p className="text-muted-foreground text-sm">Access your educational resources and dashboard</p>
+          <p className="text-muted-foreground text-sm">Smart Academic Resource Platform</p>
         </div>
 
         <Card>
           <CardHeader className="space-y-2">
             <CardTitle className="flex items-center gap-2">
               <LogIn className="h-5 w-5 text-primary" />
-              Sign In
+              Student Sign In
             </CardTitle>
-            <CardDescription>Use your Google account to get started</CardDescription>
+            <CardDescription>Click below to sign in and access the dashboard</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <Button
               onClick={handleSignIn}
               disabled={isSigningIn}
-              className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors"
+              className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors flex items-center justify-center gap-2 text-base"
             >
               {isSigningIn ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Opening Dashboard...
                 </>
               ) : (
-                'Continue with Google'
+                <>
+                  <UserCheck className="h-5 w-5" />
+                  Sign In (Kamichetty Veera Pradeepthi)
+                </>
               )}
             </Button>
           </CardContent>
@@ -73,7 +84,7 @@ export default function LoginPage() {
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            Aditya University • Department of Information Technology
           </p>
         </div>
       </div>

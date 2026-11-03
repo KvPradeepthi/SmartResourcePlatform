@@ -152,33 +152,28 @@ export default function HomePage() {
     }
   }, [sessionStatus])
 
-  // Track if this is the initial page load (first visit this session)
-  const [isInitialLoad, setIsInitialLoad] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !sessionStorage.getItem('dashboard_loaded')
+  const [mounted, setMounted] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined' && sessionStorage.getItem('dashboard_loaded')) {
+      setIsInitialLoad(false)
     }
-    return true
-  })
+  }, [])
 
   // Mark as loaded once data is ready
   useEffect(() => {
     if (sessionStatus !== 'loading' && !loading && !isLoadingPrime) {
-      sessionStorage.setItem('dashboard_loaded', 'true')
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('dashboard_loaded', 'true')
+      }
       setIsInitialLoad(false)
     }
   }, [sessionStatus, loading, isLoadingPrime])
 
-  // Loading state - full-screen on initial load, centered on navigation
-  if (sessionStatus === 'loading' || loading || isLoadingPrime) {
-    if (isInitialLoad) {
-      // Full-screen loading for initial page load
-      return (
-        <div className="fixed inset-0 z-[100] flex justify-center items-center bg-background">
-          <Loader />
-        </div>
-      )
-    }
-    // Centered loading for navigation (TopBar visible)
+  // Clean uniform loading state during SSR and initial hydration to avoid mismatch
+  if (!mounted || sessionStatus === 'loading' || loading || isLoadingPrime) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader />

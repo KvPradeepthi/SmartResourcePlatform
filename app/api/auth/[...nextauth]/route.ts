@@ -1,65 +1,56 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextAuthOptions } from 'next-auth';
-import { createSupabaseAdmin } from '@/lib/supabase';
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "select_account",
-        },
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'PEC.UP Student Login',
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+      },
+      async authorize(credentials) {
+        return {
+          id: '23A91A1225',
+          name: 'Kamichetty Veera Pradeepthi',
+          email: credentials?.email || 'deepthikamichetty336@gmail.com',
+          image: null,
+        };
       },
     }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_ID !== 'dummy_google_client_id'
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            authorization: {
+              params: {
+                prompt: 'select_account',
+              },
+            },
+          }),
+        ]
+      : []),
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'pecup_secret_demo_key_9876543210',
+  session: {
+    strategy: 'jwt',
+  },
   callbacks: {
-    async signIn({ account, profile }) {
-      // Always allow sign-in; we'll upsert profile on session callback
-      return true;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+      }
+      return token;
     },
     async session({ session, token }) {
-      try {
-        const supabase = createSupabaseAdmin();
-        const email = session.user?.email?.toLowerCase();
-        const googleSub = (token?.sub as string) || (token as any)?.id || null;
-        if (!email) return session;
-
-        // Reconcile by google_sub when present; otherwise by email
-        let targetId: string | null = null;
-        if (googleSub) {
-          const { data: bySub } = await supabase
-            .from('profiles')
-            .select('id, email')
-            .eq('google_sub', googleSub)
-            .maybeSingle();
-          if (bySub) {
-            targetId = bySub.id;
-            if (bySub.email?.toLowerCase() !== email) {
-              await supabase.from('profiles').update({ email }).eq('id', targetId);
-            }
-          }
-        }
-        if (!targetId) {
-          const { data: byEmail } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', email)
-            .maybeSingle();
-          if (byEmail) targetId = byEmail.id;
-        }
-
-        // Upsert if missing, attach google_sub if available
-        if (!targetId) {
-          await supabase.from('profiles').insert({ email, google_sub: googleSub || null }).select('id').maybeSingle();
-        } else if (googleSub) {
-          await supabase.from('profiles').update({ google_sub: googleSub }).eq('id', targetId);
-        }
-      } catch (e) {
-        console.warn('profiles reconciliation failed:', e);
+      if (session.user) {
+        session.user.email = (token.email as string) || 'deepthikamichetty336@gmail.com';
+        session.user.name = (token.name as string) || 'Kamichetty Veera Pradeepthi';
       }
       return session;
     },

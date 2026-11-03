@@ -6,10 +6,16 @@ import { Button } from '@/components/ui/button'
 import { LogOut, RotateCcw } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export function TopBar() {
   const { data: session } = useSession()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleResetProfile = () => {
     router.push('/profile')
@@ -20,7 +26,7 @@ export function TopBar() {
       <div className="text-2xl md:text-3xl font-bold text-primary">PEC.UP</div>
       <div className="flex gap-2">
         <RefreshButton />
-        {session && (
+        {mounted && session && (
           <>
             <Button
               variant="ghost"
