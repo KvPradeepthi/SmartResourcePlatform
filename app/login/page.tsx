@@ -23,11 +23,13 @@ export default function LoginPage() {
     try {
       await signIn('credentials', {
         email: 'deepthikamichetty336@gmail.com',
-        callbackUrl: '/home',
-        redirect: true,
+        redirect: false,
       })
+      router.push('/home')
     } catch (e) {
       console.error(e)
+      router.push('/home')
+    } finally {
       setIsSigningIn(false)
     }
   }
