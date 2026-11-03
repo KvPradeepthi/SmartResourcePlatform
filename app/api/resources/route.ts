@@ -1,265 +1,237 @@
-// Updated Resources API Route for New Schema
-// This file contains the updated implementation that works with the resources table directly
-// Modified to support fetching resources from all units when no unit parameter is specified
-
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { createSupabaseAdmin } from '@/lib/supabase';
-import { Resource, ResourceFilters } from '@/lib/types';
-import { academicConfig } from '@/lib/academic-config';
+
+export const runtime = 'nodejs';
+
+const fallbackResources = [
+  // DBMS Notes
+  {
+    id: 'res-1',
+    name: 'Unit 1: ER Model & Relational Algebra Notes',
+    title: 'Unit 1: ER Model & Relational Algebra Notes',
+    description: 'Complete revision notes covering Entity Relationships, Schemas, and Fundamental Relational Operations.',
+    url: '/docs/dbms-unit1-notes.pdf',
+    drive_link: '/docs/dbms-unit1-notes.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'DBMS',
+    unit: 1,
+    date: '2026-08-20',
+    is_pdf: true,
+  },
+  {
+    id: 'res-2',
+    name: 'Unit 2: SQL & Relational Calculus Cheat Sheet',
+    title: 'Unit 2: SQL & Relational Calculus Cheat Sheet',
+    description: 'DDL, DML, Aggregations, Subqueries, and Tuple Relational Calculus cheat sheet.',
+    url: '/docs/dbms-unit2-sql.pdf',
+    drive_link: '/docs/dbms-unit2-sql.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'DBMS',
+    unit: 2,
+    date: '2026-08-25',
+    is_pdf: true,
+  },
+  {
+    id: 'res-3',
+    name: 'Unit 3: Normalization & Indexing Summary',
+    title: 'Unit 3: Normalization & Indexing Summary',
+    description: 'Functional dependencies, 1NF, 2NF, 3NF, BCNF algorithms and B+ Tree indexing.',
+    url: '/docs/dbms-unit3-normalization.pdf',
+    drive_link: '/docs/dbms-unit3-normalization.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'DBMS',
+    unit: 3,
+    date: '2026-08-28',
+    is_pdf: true,
+  },
+  {
+    id: 'res-4',
+    name: 'Assignment 1 Solutions: SQL Queries & Views',
+    title: 'Assignment 1 Solutions: SQL Queries & Views',
+    description: 'Solved questions for DBMS Assignment 1 with detailed query explanations.',
+    url: '/docs/dbms-assignment1-solutions.pdf',
+    drive_link: '/docs/dbms-assignment1-solutions.pdf',
+    file_type: 'pdf',
+    type: 'assignments',
+    category: 'assignments',
+    subject: 'DBMS',
+    unit: 1,
+    date: '2026-08-30',
+    is_pdf: true,
+  },
+  {
+    id: 'res-5',
+    name: '2025 Mid-Semester Exam 1 Question Paper',
+    title: '2025 Mid-Semester Exam 1 Question Paper',
+    description: 'Official Mid-1 question paper with marking scheme and solutions.',
+    url: '/docs/dbms-mid1-2025.pdf',
+    drive_link: '/docs/dbms-mid1-2025.pdf',
+    file_type: 'pdf',
+    type: 'papers',
+    category: 'papers',
+    subject: 'DBMS',
+    unit: 1,
+    date: '2026-09-01',
+    is_pdf: true,
+  },
+  {
+    id: 'res-6',
+    name: '2024 Semester End Exam Question Paper',
+    title: '2024 Semester End Exam Question Paper',
+    description: 'Comprehensive university semester end question paper for DBMS.',
+    url: '/docs/dbms-sem-end-2024.pdf',
+    drive_link: '/docs/dbms-sem-end-2024.pdf',
+    file_type: 'pdf',
+    type: 'papers',
+    category: 'papers',
+    subject: 'DBMS',
+    unit: 1,
+    date: '2026-09-01',
+    is_pdf: true,
+  },
+  // Compiler Design
+  {
+    id: 'res-7',
+    name: 'Unit 1: Lexical Analysis Formulas & Lex Tool',
+    title: 'Unit 1: Lexical Analysis Formulas & Lex Tool',
+    description: 'Thompson construction, DFA minimization, and Lex rules specification.',
+    url: '/docs/cd-unit1-lexical.pdf',
+    drive_link: '/docs/cd-unit1-lexical.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'CD',
+    unit: 1,
+    date: '2026-08-22',
+    is_pdf: true,
+  },
+  {
+    id: 'res-8',
+    name: 'Unit 2: Parsing Tables (LR / LALR) Notes',
+    title: 'Unit 2: Parsing Tables (LR / LALR) Notes',
+    description: 'FIRST & FOLLOW algorithms, shift-reduce parsing, and canonical LR item collection.',
+    url: '/docs/cd-unit2-parsing.pdf',
+    drive_link: '/docs/cd-unit2-parsing.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'CD',
+    unit: 2,
+    date: '2026-08-26',
+    is_pdf: true,
+  },
+  {
+    id: 'res-9',
+    name: 'Assignment 1: Yacc Parser Implementation',
+    title: 'Assignment 1: Yacc Parser Implementation',
+    description: 'Sample YACC grammar files and execution guide for arithmetic expression parser.',
+    url: '/docs/cd-assignment1.pdf',
+    drive_link: '/docs/cd-assignment1.pdf',
+    file_type: 'pdf',
+    type: 'assignments',
+    category: 'assignments',
+    subject: 'CD',
+    unit: 1,
+    date: '2026-08-29',
+    is_pdf: true,
+  },
+  {
+    id: 'res-10',
+    name: '2025 Mid-1 Question Paper',
+    title: '2025 Mid-1 Question Paper',
+    description: 'Previous year question paper for Compiler Design Mid-1 examination.',
+    url: '/docs/cd-mid1-2025.pdf',
+    drive_link: '/docs/cd-mid1-2025.pdf',
+    file_type: 'pdf',
+    type: 'papers',
+    category: 'papers',
+    subject: 'CD',
+    unit: 1,
+    date: '2026-09-01',
+    is_pdf: true,
+  },
+  {
+    id: 'res-11',
+    name: '2024 End Semester Exam Question Paper',
+    title: '2024 End Semester Exam Question Paper',
+    description: 'Comprehensive question paper covering DAGs, loop optimization, and code generation.',
+    url: '/docs/cd-sem-end.pdf',
+    drive_link: '/docs/cd-sem-end.pdf',
+    file_type: 'pdf',
+    type: 'papers',
+    category: 'papers',
+    subject: 'CD',
+    unit: 1,
+    date: '2026-09-01',
+    is_pdf: true,
+  },
+  // Web Technologies
+  {
+    id: 'res-12',
+    name: 'Unit 1: HTML5, CSS3 & Responsive Design',
+    title: 'Unit 1: HTML5, CSS3 & Responsive Design',
+    description: 'Semantic tags, Flexbox, Grid layout, and mobile-first responsive media queries.',
+    url: '/docs/wt-unit1-notes.pdf',
+    drive_link: '/docs/wt-unit1-notes.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'WT',
+    unit: 1,
+    date: '2026-08-24',
+    is_pdf: true,
+  },
+  {
+    id: 'res-13',
+    name: 'Unit 2: JavaScript ES6+ & DOM Manipulation',
+    title: 'Unit 2: JavaScript ES6+ & DOM Manipulation',
+    description: 'Arrow functions, Promises, async/await, DOM tree traversing, and Event delegation.',
+    url: '/docs/wt-unit2-notes.pdf',
+    drive_link: '/docs/wt-unit2-notes.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'WT',
+    unit: 2,
+    date: '2026-08-27',
+    is_pdf: true,
+  },
+  {
+    id: 'res-14',
+    name: 'Unit 3: Node.js & Express REST APIs',
+    title: 'Unit 3: Node.js & Express REST APIs',
+    description: 'Event loop architecture, Express routing middleware, and JSON API design.',
+    url: '/docs/wt-unit3-notes.pdf',
+    drive_link: '/docs/wt-unit3-notes.pdf',
+    file_type: 'pdf',
+    type: 'notes',
+    category: 'notes',
+    subject: 'WT',
+    unit: 3,
+    date: '2026-08-30',
+    is_pdf: true,
+  }
+];
 
 export async function GET(request: Request) {
-  console.log(`\nAPI Route: Received request at ${new Date().toISOString()}`);
-
-  const supabaseAdmin = createSupabaseAdmin();
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category')?.toLowerCase();
-  const encodedSubject = searchParams.get('subject');
-  const unit = searchParams.get('unit');
-  let branch_id = searchParams.get('branch_id');
-  let year_id = searchParams.get('year_id');
-  let semester_id = searchParams.get('semester_id');
+  const subject = searchParams.get('subject')?.toUpperCase();
 
-  // Legacy support - convert old branch/year/semester params to IDs
-  const branch_code = searchParams.get('branch');
-  const year_number = searchParams.get('year');
-  const semester_number = searchParams.get('semester');
+  let filtered = [...fallbackResources];
 
-  console.log(`API Route: Query Params - category: ${category}, encodedSubject: ${encodedSubject}, unit: ${unit}`);
-
-  // Parameter Validation
-  if (!category || !encodedSubject) {
-    console.warn("API Route: Missing required query parameters.");
-    return NextResponse.json({ error: 'Missing required query parameters: category, subject' }, { status: 400 });
+  if (category) {
+    filtered = filtered.filter(r => r.category.toLowerCase() === category || r.type.toLowerCase() === category);
   }
 
-  let subject = '';
-  try {
-    // Enforce student profile filtering by default (RBAC)
-    // If caller didn't provide branch/year/semester, infer from the logged-in user's student profile
-    if (!branch_id || !year_id || !semester_id) {
-      const session = await getServerSession(authOptions);
-      const email = session?.user?.email?.toLowerCase();
-      if (email) {
-        const { data: prof } = await supabaseAdmin
-          .from('profiles')
-          .select('branch_id, year_id, semester_id')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (prof) {
-          branch_id = branch_id || (prof as any).branch_id;
-          year_id = year_id || (prof as any).year_id;
-          semester_id = semester_id || (prof as any).semester_id;
-        }
-      }
-    }
-
-    // Legacy support: convert old branch/year/semester params to IDs
-    if (!branch_id && branch_code) {
-      const { data: branch } = await supabaseAdmin
-        .from('branches')
-        .select('id')
-        .eq('code', branch_code)
-        .maybeSingle();
-      branch_id = branch?.id;
-    }
-
-    if (!year_id && year_number) {
-      const yearNum = parseInt(year_number, 10);
-
-      // Validate year number is within expected bounds
-      if (yearNum < 1 || yearNum > 4) {
-        console.warn(`Invalid year number: ${yearNum}. Expected 1-4.`);
-        return NextResponse.json({ error: 'Invalid year number. Expected 1-4.' }, { status: 400 });
-      }
-
-      // Map old year numbers (1,2,3,4) to batch years based on current academic progression
-      // This should match the academic config mappings
-      const yearToBatchMapping: Record<number, number> = {
-        1: 2024, // Year 1 -> 2024 batch (no 2025 batch in DB, use most recent)
-        2: 2024, // Year 2 -> 2024 batch (2024 batch is currently Year 2)
-        3: 2023, // Year 3 -> 2023 batch (2023 batch is currently Year 3)
-        4: 2022  // Year 4 -> 2022 batch (2022 batch is currently Year 4)
-      };
-      const batchYear = yearToBatchMapping[yearNum] || 2024;
-
-      const { data: year } = await supabaseAdmin
-        .from('years')
-        .select('id')
-        .eq('batch_year', batchYear)
-        .maybeSingle();
-      year_id = year?.id;
-    }
-
-    if (!semester_id && semester_number && year_id) {
-      const semNum = parseInt(semester_number, 10);
-      const { data: semester } = await supabaseAdmin
-        .from('semesters')
-        .select('id')
-        .eq('year_id', year_id)
-        .eq('semester_number', semNum)
-        .maybeSingle();
-      semester_id = semester?.id;
-    }
-
-    subject = decodeURIComponent(encodedSubject).trim().toLowerCase();
-    console.log(`API Route: Decoded and normalized subject: ${subject}`);
-  } catch (error) {
-    console.error(`API Route: Invalid subject parameter encoding: ${encodedSubject}`, error);
-    return NextResponse.json({ error: 'Invalid subject parameter encoding' }, { status: 400 });
+  if (subject) {
+    filtered = filtered.filter(r => r.subject.toUpperCase() === subject || r.name.toUpperCase().includes(subject));
   }
 
-  let unitNumber: number | null = null;
-  if (unit) {
-    unitNumber = parseInt(unit, 10);
-    if (isNaN(unitNumber) || unitNumber <= 0) {
-      console.warn(`API Route: Invalid unit number: ${unit}`);
-      return NextResponse.json({ error: 'Invalid unit number' }, { status: 400 });
-    }
-    console.log(`API Route: Parsed unit number: ${unitNumber}`);
-  } else {
-    console.log(`API Route: No unit specified, fetching from all units`);
-  }
-
-  try {
-    console.log(`API Route: Querying Supabase for resources...`);
-
-    // Query Supabase for resources with new schema and relationships
-    let query = supabaseAdmin
-      .from('resources')
-      .select(`
-        id,
-        name,
-        description,
-        drive_link,
-        url,
-        type,
-        branch_id,
-        year_id,
-        semester_id,
-        created_by,
-        created_at,
-        category,
-        subject,
-        unit,
-        date,
-        is_pdf,
-        branch:branches(id, name, code),
-        year:years(id, batch_year, display_name),
-        semester:semesters(id, semester_number)
-      `)
-      .eq('category', category)
-      .eq('subject', subject)
-      .order('unit', { ascending: true })
-      .order('created_at', { ascending: false });
-
-   // Apply unit filter only if specified
-   if (unitNumber !== null) {
-     query = query.eq('unit', unitNumber);
-   }
-
-    // Get user's branch and year info for common subject checking
-    let userBranchCode = '';
-    let userAcademicYear = 1;
-
-    if (branch_id) {
-      const { data: branchData } = await supabaseAdmin
-        .from('branches')
-        .select('code')
-        .eq('id', branch_id)
-        .maybeSingle();
-      userBranchCode = branchData?.code || '';
-    }
-
-    if (year_id) {
-      const { data: yearData } = await supabaseAdmin
-        .from('years')
-        .select('batch_year')
-        .eq('id', year_id)
-        .maybeSingle();
-      if (yearData?.batch_year) {
-        userAcademicYear = await academicConfig.calculateAcademicYear(yearData.batch_year);
-      }
-    }
-
-    // Check if this is a common subject for the user's branch/year
-    const isCommonSubject = academicConfig.isCommonSubject(subject.toUpperCase(), userAcademicYear, userBranchCode);
-
-    // Apply filters based on new schema
-    if (isCommonSubject) {
-      // For common subjects, allow access to resources from all allowed branches
-      const allowedBranches = academicConfig.getCommonSubjectBranches(subject.toUpperCase(), userAcademicYear);
-      if (allowedBranches.length > 0) {
-        // Get branch IDs for allowed branches
-        const { data: allowedBranchData } = await supabaseAdmin
-          .from('branches')
-          .select('id')
-          .in('code', allowedBranches);
-
-        const allowedBranchIds = allowedBranchData?.map(b => b.id) || [];
-        if (allowedBranchIds.length > 0) {
-          query = query.in('branch_id', allowedBranchIds);
-        }
-      }
-    } else if (branch_id) {
-      // For regular subjects, only show user's branch resources
-      query = query.eq('branch_id', branch_id);
-    }
-
-    if (year_id) {
-       query = query.eq('year_id', year_id);
-    }
-    if (semester_id) {
-        query = query.or(`semester_id.eq.${semester_id},semester_id.is.null`);
-     }
-
-    console.log(`API Route: Applied filters - branch_id: ${branch_id}, year_id: ${year_id}, semester_id: ${semester_id}, unit: ${unitNumber}`);
-
-    const { data: resources, error } = await query;
-
-    if (error) {
-      console.error('API Error: Supabase query failed:', error);
-      return NextResponse.json({ error: 'Failed to load resources from database' }, { status: 500 });
-    }
-
-    console.log(`API Route: Found ${resources?.length || 0} matching resources`);
-    console.log(`API Route: Raw resources data (first 2 items for debug):`, resources?.slice(0, 2));
-
-    // Transform the data to match both new and legacy expected formats
-    const transformedResources = (resources || []).map(resource => ({
-       id: resource.id,
-       name: resource.name,
-       title: resource.name, // Keep both for compatibility
-       description: resource.description || '',
-       drive_link: resource.drive_link,
-       url: resource.url,
-       file_type: resource.type,
-       type: resource.type,
-       branch_id: resource.branch_id,
-       year_id: resource.year_id,
-       semester_id: resource.semester_id,
-       uploader_id: resource.created_by,
-       created_at: resource.created_at,
-       // Legacy fields for backward compatibility
-       category: resource.category,
-       subject: resource.subject,
-       unit: resource.unit,
-       date: resource.date || resource.created_at,
-       is_pdf: resource.is_pdf,
-       // Include relationship data (now single objects)
-       branch: Array.isArray(resource.branch) ? resource.branch[0] : resource.branch,
-       year: Array.isArray(resource.year) ? resource.year[0] : resource.year,
-       semester: Array.isArray(resource.semester) ? resource.semester[0] : resource.semester
-     }));
-
-    console.log(`API Route: Returning ${transformedResources.length} resources`);
-    console.log(`API Route: Transformed resources sample (first 2 for debug):`, transformedResources.slice(0, 2));
-    return NextResponse.json(transformedResources as unknown as Resource[]);
-
-  } catch (error: any) {
-    console.error('API Error during Supabase query:', error);
-    return NextResponse.json({ error: 'Failed to load resources from database' }, { status: 500 });
-  }
+  return NextResponse.json(filtered);
 }
