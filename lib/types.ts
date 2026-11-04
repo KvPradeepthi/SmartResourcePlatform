@@ -331,6 +331,8 @@ export interface UserPermissions {
     branchIds?: string[];
     yearIds?: string[];
   };
+}
+
 // Prime Section Data Types
 export interface PrimeSectionResource {
   name: string;
